@@ -24,7 +24,7 @@ const form = reactive({
   amount: null,
   type: 'expense', // 账单类型 'expense'-多人消费, 'loan'-个人借款, 'repayment'-个人还款
   payerId: '', // 付款人
-  participants: [], // 受益人
+  participants: [] as string[], // 受益人
   date: '', // 日期
   desc: '',
 })
@@ -94,19 +94,33 @@ const onSubmit = async () => {
       description: form.desc, 
       transactionDate: form.date,
     }
+    // 类型: expense (多人消费)
+    //   付款人 (form.payerId) -> formData.payerId
+    //   受益人 (form.participants) -> formData.participants
+    //   lenderId 和 borrowerId 应为 null。
+    // 类型: loan (个人借款)
+    //   付款人/出借人 (form.payerId) -> formData.lenderId
+    //   受益人/借款人 (form.participants[0]) -> formData.borrowerId
+    //   payerId 和 participants 应为 null / []。
+    // 类型: repayment (个人还款)
+    //   付款人/还款人 (form.payerId) -> formData.borrowerId (还钱的人是债务人)
+    //   受益人/收款人 (form.participants[0]) -> formData.lenderId (收钱的人是债权人)
+    //   payerId 和 participants 应为 null / []。
     switch(form.type) {
       case 'expense':
+        // 多人消费：记录谁付了钱，以及谁参与了消费
         formData.payerId = form.payerId;  // 付款人
         formData.participants = form.participants; // 受益人
         break
       case 'loan':
-      case 'repayment':
+        // 个人借款：付款人是“出借人”，受益人是“借款人”
         formData.payerId = form.payerId;  // 付款人
         formData.participants = form.participants; // 受益人
         formData.lenderId = form.payerId; // 出借人
         formData.borrowerId = form.participants[0]!; // 借款人
         break
       case 'repayment':
+        // 个人还款：付款人(还款人)是“借款人”，受益人(收款人)是“出借人”
         formData.payerId = form.payerId;  // 付款人
         formData.participants = form.participants; // 受益人
         formData.lenderId = form.participants[0]!; // 收款人
@@ -150,10 +164,10 @@ const onSubmit = async () => {
           </el-form-item>
           <el-form-item label="账单类型：" prop="type">
             <!-- 'expense'-多人消费, 'loan'-个人借款, 'repayment'-个人还款 -->
-            <el-radio-group v-model="form.type">
+            <el-radio-group v-model="form.type" @change="form.participants = []">
               <el-radio value="expense">代付</el-radio>
-              <el-radio value="loan" disabled>借款</el-radio>
-              <el-radio value="repayment" disabled>还款</el-radio>
+              <el-radio value="loan" >借款</el-radio>
+              <el-radio value="repayment" >还款</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="付款人：" prop="payerId">
@@ -166,7 +180,10 @@ const onSubmit = async () => {
           <el-form-item label="受益人：" prop="participants">
             <el-checkbox-group v-model="form.participants">
               <template v-for="item in userList">
-                <el-checkbox :label="item.id">{{ item.name }}</el-checkbox>
+                <el-checkbox 
+                  :label="item.id" 
+                  :disabled="(form.type == 'loan' || form.type == 'repayment') && form.participants.length > 0 && !form.participants.includes(item.id)"
+                >{{ item.name }}</el-checkbox>
               </template>
             </el-checkbox-group>
           </el-form-item>

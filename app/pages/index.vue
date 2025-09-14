@@ -107,6 +107,15 @@ const dateFilter = (date: string) => {
 };
 
 const billingModalVisible = ref(false);
+
+const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
+  const map = {
+    'expense': '代付',
+    'loan': '个人借款',
+    'repayment': '个人还款',
+  }
+  return map[value]
+}
 </script>
 
 <template>
@@ -152,6 +161,10 @@ const billingModalVisible = ref(false);
               <li class="record-info-item">
                 <div class="record-info-label">金额：</div>
                 <div class="record-info-value">{{ item.amount }}</div>
+              </li>
+              <li class="record-info-item">
+                <div class="record-info-label">类型：</div>
+                <div class="record-info-value">{{ typeFilter(item.type) }}</div>
               </li>
               <li class="record-info-item">
                 <div class="record-info-label">付款人：</div>
