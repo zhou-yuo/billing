@@ -32,9 +32,9 @@ onMounted(() => {
 
 const form = reactive({
   amount: null,
-  type: 1, // 账单类型
-  creditor: '', // 债权人
-  debtor: [], // 债务人
+  type: 'expense', // 账单类型 'expense'-多人消费, 'loan'-个人借款, 'repayment'-个人还款
+  payerId: '', // 付款人
+  participants: [], // 受益人
   date: '', // 日期
   desc: '',
 })
@@ -46,8 +46,10 @@ onMounted(() => {
 const rules = reactive({
   amount: { required: true, message: '请输入金额', trigger: 'blur' },
   type: { required: true, message: '请选择账单类型', trigger: 'change' },
-  creditor: { required: true, message: '请选择债权人', trigger: 'change' },
-  debtor: { required: true, message: '请选择债务人', trigger: 'change' },
+  payerId: { required: true, message: '请选择付款人', trigger: 'change' },
+  participants: { required: true, message: '请选择受益人', trigger: 'change' },
+  date: { required: true, message: '请选择日期', trigger: 'change' },
+  desc: { required: true, message: '请输入描述', trigger: 'blur' },
 })
 
 const screenWidth = ref(0);
@@ -72,11 +74,62 @@ const handleConfirm = async () => {
   if(!formRef.value) return;
   await formRef.value.validate((valid, fields) => {
     if (valid) {
-      console.log('submit!')
-    } else {
-      console.log('error submit!', fields)
+      onSubmit()
     }
   })
+}
+
+const onSubmit = async () => {
+  try {
+    let formData: {
+      amount: number | string,
+      type: string,
+      payerId: null | string,
+      participants: string[],
+      lenderId: null | string,
+      borrowerId: null | string,
+      description: string,
+      transactionDate: string,
+    } = {
+      amount: form.amount!,
+      type: form.type, // 'expense'-多人消费, 'loan'-个人借款, 'repayment'-个人还款
+      payerId: null, // 付款人
+      participants: [], // 受益人
+      // 债权人/出借人的用户 ID。仅在 type 为 loan 或 repayment 时需要填写。如果 type 是 expense，请传 null。
+      lenderId: null, // 出借人
+      // 债务人/借款人的用户 ID。仅在 type 为 loan 或 repayment 时需要填写。如果 type 是 expense，请传 null。
+      borrowerId: null, // 借款人
+      description: form.desc, 
+      transactionDate: form.date,
+    }
+    switch(form.type) {
+      case 'expense':
+        formData.payerId = form.payerId;  // 付款人
+        formData.participants = form.participants; // 受益人
+        break
+      case 'loan':
+      case 'repayment':
+        formData.payerId = form.payerId;  // 付款人
+        formData.participants = form.participants; // 受益人
+        formData.lenderId = form.payerId; // 出借人
+        formData.borrowerId = form.participants[0]!; // 借款人
+        break
+      case 'repayment':
+        formData.payerId = form.payerId;  // 付款人
+        formData.participants = form.participants; // 受益人
+        formData.lenderId = form.participants[0]!; // 收款人
+        formData.borrowerId = form.payerId; // 还款人
+        break
+    }
+    const data = await $apiFetch('transactions/create', {
+      method: 'post',
+      body: formData
+    })
+    console.log("🚀 ~ getUserList ~ data:", data)
+    ElMessage.success('提交成功')
+  } catch(err) {
+    console.error(err);
+  }
 }
 
 </script>
@@ -100,23 +153,24 @@ const handleConfirm = async () => {
             <el-input-number v-model="form.amount" :min="0" :max="999999999" :step="1" :precision="2" placeholder="请输入金额" style="width: 80%;" />
           </el-form-item>
           <el-form-item label="账单类型：" prop="type">
+            <!-- 'expense'-多人消费, 'loan'-个人借款, 'repayment'-个人还款 -->
             <el-radio-group v-model="form.type">
-              <el-radio :value="1">代付</el-radio>
-              <el-radio :value="2">借款</el-radio>
-              <el-radio :value="3">划款</el-radio>
+              <el-radio value="expense">代付</el-radio>
+              <el-radio value="loan">借款</el-radio>
+              <el-radio value="repayment">还款</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="债权人：" prop="creditor">
-            <el-radio-group v-model="form.creditor">
+          <el-form-item label="付款人：" prop="payerId">
+            <el-radio-group v-model="form.payerId">
               <template v-for="item in userList">
                 <el-radio :value="item.id">{{ item.name }}</el-radio>
               </template>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="债务人：" prop="debtor">
-            <el-checkbox-group v-model="form.debtor">
+          <el-form-item label="受益人：" prop="participants">
+            <el-checkbox-group v-model="form.participants">
               <template v-for="item in userList">
-                <el-checkbox :label="item.name" :name="item.id"></el-checkbox>
+                <el-checkbox :label="item.id">{{ item.name }}</el-checkbox>
               </template>
             </el-checkbox-group>
           </el-form-item>
@@ -134,6 +188,7 @@ const handleConfirm = async () => {
               autosize
               type="textarea"
               placeholder="请输入描述"
+              maxlength="100"
             />
           </el-form-item>
         </el-form>
