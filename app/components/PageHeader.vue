@@ -6,7 +6,7 @@ import { ref } from "vue"
 <template>
   <div class="page-header">
     <div class="page-header-main">
-      Billing
+      账单
     </div>
     <div class="page-header-placeholder"></div>
   </div>

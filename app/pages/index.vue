@@ -139,8 +139,8 @@ const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
       >
         <ul>
           <li v-for="item in summaryList" class="mb-4 flex gap-4">
-            <b>{{ item.name }}：</b>
-            <span class="amount-color">{{ item.balance }}</span>
+            <b style="min-width: 56px;">{{ item.name }}：</b>
+            <span class="amount-color">${{ item.balance }}</span>
           </li>
         </ul>
       </el-card>
@@ -160,7 +160,7 @@ const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
             <ul>
               <li class="record-info-item">
                 <div class="record-info-label">金额：</div>
-                <div class="record-info-value">{{ item.amount }}</div>
+                <div class="record-info-value">${{ item.amount }}</div>
               </li>
               <li class="record-info-item">
                 <div class="record-info-label">类型：</div>

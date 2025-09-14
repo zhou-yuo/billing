@@ -131,7 +131,6 @@ const onSubmit = async () => {
       method: 'post',
       body: formData
     })
-    console.log("🚀 ~ getUserList ~ data:", data)
     ElMessage.success('提交成功')
     emits('submit')
     dialogVisible.value = false;
