@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import type { ApiResponse } from "~/types/apiResponse";
+import type { Transaction } from "~/types/record";
+
+const { data: list, pending, error } = await useApiFetch<ApiResponse<Transaction[]>>('transactions')
 
 const handleDeleteRecord = () => {
   ElMessageBox.confirm(
@@ -63,8 +67,8 @@ const billingModalVisible = ref(false)
     </div>
 
     <div>
-      <el-row :gutter="10">
-        <el-col v-for="value in 20" :xs="24" :sm="12" :md="8" :lg="6">
+      <el-row v-if="list && list.data" :gutter="10">
+        <el-col v-for="value in list.data" :xs="24" :sm="12" :md="8" :lg="6">
           <el-card class="mb-12" header-class="card-header" body-class="card-body" footer-class="card-footer">
             <ul>
               <li class="record-info-item">

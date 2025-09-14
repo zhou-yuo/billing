@@ -12,6 +12,7 @@ export const transactions = sqliteTable('transactions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   description: text('description').notNull(),
   amount: real('amount').notNull(), // real 用于存储浮点数
+  transactionDate: integer('transaction_date', { mode: 'timestamp' }).notNull(),
   payerId: text('payer_id').notNull().references(() => users.id), // 外键，关联到用户表的id
   
   // 对于参与者，最规范的是用一个关联表 (many-to-many)

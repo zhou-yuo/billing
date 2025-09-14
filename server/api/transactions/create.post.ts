@@ -9,6 +9,7 @@ export default defineEventHandler(async (event) => {
   const [newTransaction] = await db.insert(tables.transactions).values({
     description: body.description,
     amount: body.amount,
+    transactionDate: new Date(body.transactionDate),
     payerId: body.payerId,
     participants: body.participants,
     type: body.type,
