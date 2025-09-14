@@ -2,33 +2,23 @@
 import type { FormInstance } from "element-plus"
 import dayjs from 'dayjs';
 import { ref, computed, reactive } from "vue"
+import type { User } from "~/types/user";
+
 const { $apiFetch } = useNuxtApp()
 
-const emits = defineEmits(['closed'])
+const props = defineProps({
+  userList: {
+    type: Array as PropType<User[]>,
+    default: () => []
+  }
+})
+const emits = defineEmits(['closed', 'submit'])
 
 const dialogVisible = ref(true)
 
 const closed = () => {
   emits('closed')
 }
-
-const userList = ref<{
-  id: string,
-  name: string
-}[]>([])
-const getUserList = async () => {
-  try {
-    const data = await $apiFetch('user/users')
-    console.log("🚀 ~ getUserList ~ data:", data)
-    userList.value = data.data || []
-  } catch(err) {
-    console.error(err);
-  }
-}
-
-onMounted(() => {
-  getUserList()
-})
 
 const form = reactive({
   amount: null,
@@ -79,8 +69,10 @@ const handleConfirm = async () => {
   })
 }
 
+const submitLoadig = ref(false)
 const onSubmit = async () => {
   try {
+    submitLoadig.value = true
     let formData: {
       amount: number | string,
       type: string,
@@ -127,8 +119,12 @@ const onSubmit = async () => {
     })
     console.log("🚀 ~ getUserList ~ data:", data)
     ElMessage.success('提交成功')
+    emits('submit')
+    dialogVisible.value = false;
   } catch(err) {
     console.error(err);
+  } finally {
+    submitLoadig.value = false
   }
 }
 
@@ -156,8 +152,8 @@ const onSubmit = async () => {
             <!-- 'expense'-多人消费, 'loan'-个人借款, 'repayment'-个人还款 -->
             <el-radio-group v-model="form.type">
               <el-radio value="expense">代付</el-radio>
-              <el-radio value="loan">借款</el-radio>
-              <el-radio value="repayment">还款</el-radio>
+              <el-radio value="loan" disabled>借款</el-radio>
+              <el-radio value="repayment" disabled>还款</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="付款人：" prop="payerId">
@@ -196,7 +192,7 @@ const onSubmit = async () => {
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleConfirm">
+          <el-button type="primary" :loading="submitLoadig" @click="handleConfirm">
             确认
           </el-button>
         </div>
