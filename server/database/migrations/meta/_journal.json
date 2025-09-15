@@ -15,6 +15,13 @@
       "when": 1757861169454,
       "tag": "0001_rapid_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1757910315367,
+      "tag": "0002_puzzling_spencer_smythe",
+      "breakpoints": true
     }
   ]
 }
