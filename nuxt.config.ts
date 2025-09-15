@@ -10,6 +10,9 @@ export default defineNuxtConfig({
   ],
   app: {
     head: {
+      htmlAttrs: {
+        lang: 'zh-CN',
+      },
       title: 'Billing',
       meta: [
         // 禁用双击放大和缩放
