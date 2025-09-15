@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import type { ApiResponse } from "~/types/apiResponse";
 import type { User } from "~/types/user";
-import type { Summary, Transaction } from "~/types/record";
+import type { Summary, Transaction, TransactionType } from "~/types/record";
 import dayjs from "dayjs";
 const { $apiFetch } = useNuxtApp();
 const { userId } = useAuth()
@@ -108,7 +108,7 @@ const dateFilter = (date: string) => {
 
 const billingModalVisible = ref(false);
 
-const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
+const typeFilter = (value: TransactionType) => {
   const map = {
     'expense': '代付',
     'loan': '个人借款',
@@ -176,6 +176,12 @@ const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
                   {{ item.participantsNames.join("、") }}
                 </div>
               </li>
+              <!-- <li class="record-info-item">
+                <div class="record-info-label">创建人：</div>
+                <div class="record-info-value">
+                  {{ item.creatorName }}
+                </div>
+              </li> -->
               <li class="record-info-item">
                 <div class="record-info-label">日期：</div>
                 <div class="record-info-value">

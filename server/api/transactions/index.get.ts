@@ -35,6 +35,7 @@ export default defineEventHandler(async () => {
       // 这样做比直接替换ID更好，因为前端有时可能仍需要ID
       return {
         ...t, // 保留所有原始交易字段
+        creatorName: userMap[t.creatorUid.toString()] || '未知用户',
         payerName: userMap[t.payerId.toString()] || '未知用户',
         lenderName: t.lenderId ? userMap[t.lenderId.toString()] : null,
         borrowerName: t.borrowerId ? userMap[t.borrowerId.toString()] : null,
