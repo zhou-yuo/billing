@@ -6,17 +6,27 @@
 const periodKey = 'current-period'
 
 export async function getCurrentPeriod(): Promise<number> {
-  const storage = useStorage('kv');
-  // 尝试从 KV 存储中获取 'current_period'
-  const currentPeriod = await storage.getItem<number>(periodKey);
-
-  if (currentPeriod === null || typeof currentPeriod !== 'number') {
-    // 如果不存在或格式不正确，则初始化为 1 并存入 KV
-    await storage.setItem(periodKey, 1);
+  const hasPeriod = await hubKV().has(periodKey)
+  console.log("🚀 ~ getCurrentPeriod ~ hasPeriod:", hasPeriod)
+  if(hasPeriod) {
+    const hubkvPeriod = await hubKV().get<number>(periodKey);
+    console.log("🚀 ~ getCurrentPeriod ~ hubkvPeriod:", hubkvPeriod)
+    return hubkvPeriod!;
+  } else {
+    await hubKV().set(periodKey, 1);
     return 1;
   }
+  // const storage = useStorage('database');
+  // // 尝试从 KV 存储中获取 'current_period'
+  // const currentPeriod = await storage.getItem<number>(periodKey);
+
+  // if (currentPeriod === null || typeof currentPeriod !== 'number') {
+  //   // 如果不存在或格式不正确，则初始化为 1 并存入 KV
+  //   await storage.setItem(periodKey, 1);
+  //   return 1;
+  // }
   
-  return currentPeriod;
+  // return currentPeriod;
 }
 
 /**
@@ -25,9 +35,18 @@ export async function getCurrentPeriod(): Promise<number> {
  * @returns {Promise<number>} 新的期数
  */
 export async function incrementCurrentPeriod(): Promise<number> {
-  const storage = useStorage('kv');
-  const currentPeriod = await getCurrentPeriod(); // 获取当前期数
+  // const storage = useStorage('database');
+  // const currentPeriod = await getCurrentPeriod(); // 获取当前期数
+  let currentPeriod = 1;
+  const hasPeriod = await hubKV().has(periodKey)
+  console.log("🚀 ~ incrementCurrentPeriod ~ hasPeriod:", hasPeriod)
+  if(hasPeriod) {
+    const hubkvPeriod = await hubKV().get<number>(periodKey);
+    console.log("🚀 ~ incrementCurrentPeriod ~ hubkvPeriod:", hubkvPeriod)
+    currentPeriod = hubkvPeriod!;
+  }
   const newPeriod = currentPeriod + 1;
-  await storage.setItem(periodKey, newPeriod);
+  // await storage.setItem(periodKey, newPeriod);
+  await hubKV().set(periodKey, newPeriod);
   return newPeriod;
 }
