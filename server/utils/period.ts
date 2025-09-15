@@ -7,6 +7,7 @@ export async function getCurrentPeriod(): Promise<number> {
   const storage = useStorage('kv');
   // 尝试从 KV 存储中获取 'current_period'
   const currentPeriod = await storage.getItem<number>('current_period');
+  console.log("🚀 ~ getCurrentPeriod ~ currentPeriod:", currentPeriod)
 
   if (currentPeriod === null || typeof currentPeriod !== 'number') {
     // 如果不存在或格式不正确，则初始化为 1 并存入 KV

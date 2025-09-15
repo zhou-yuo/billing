@@ -1,8 +1,9 @@
 // composables/useApiFetch.ts
 import type { UseFetchOptions } from '#app'
-import type { $Fetch } from 'nitropack'
 
-export function useApiFetch<T>(url: string, options: UseFetchOptions<T> = {}) {
+type UrlType = string | Ref<string> | (() => string);
+
+export function useApiFetch<T>(url: UrlType, options: UseFetchOptions<T> = {}) {
 
   const customOptions: UseFetchOptions<T> = {
     baseURL: '/api/', // 从运行时配置中获取 API 基础 URL

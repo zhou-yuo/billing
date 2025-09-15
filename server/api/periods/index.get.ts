@@ -18,12 +18,8 @@ export default defineEventHandler(async (event) => {
       getCurrentPeriod() // 获取当前期数
     ]);
 
-    console.log("🚀 ~ currentPeriod:", currentPeriod)
-
     // 提取数据库中的期数
     const dbPeriods = dbPeriodObjects.map(p => p.period);
-    console.log("🚀 ~ dbPeriodObjects:", dbPeriodObjects)
-    console.log("🚀 ~ dbPeriods:", dbPeriods)
 
     // 合并并去重
     // 使用 Set 可以非常高效地将 KV 中的当前期数和数据库中的历史期数合并，并自动去重

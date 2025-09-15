@@ -7,12 +7,15 @@ import dayjs from "dayjs";
 const { $apiFetch } = useNuxtApp();
 const { userId } = useAuth()
 
+// 选中的期数
+const periodActive = ref<number | ''>('')
+
 // 获取记录列表
-const recordListPromise = useApiFetch<ApiResponse<Transaction[]>>("transactions", {
+const recordListPromise = useApiFetch<ApiResponse<Transaction[]>>(() => `transactions?period=${periodActive.value}`, {
   key: 'transactions-list',
 });
 // 获取统计列表
-const summaryListPromise = useApiFetch<ApiResponse<Summary[]>>("transactions/summary", {
+const summaryListPromise = useApiFetch<ApiResponse<Summary[]>>(() => `transactions/summary?period=${periodActive.value}`, {
   key: 'transactions-summary',
 });
 
@@ -31,8 +34,16 @@ const summaryList = computed(() => summaryListRes.value?.data || [])
 
 const tabsActive = ref(0)
 const tabsChange = (e: any) => {
-console.log("🚀 ~ tabsChange ~ e:", e)
+  if(e.props.name === 1 && periodsList.value && periodsList.value.length) {
+    // 查看往期，默认选中最后一个往期
+    // index 0是本期，要取 1;
+    periodActive.value = periodsList.value[1]!;
+  } else {
+    periodActive.value = ''
+  }
+  console.log("🚀 ~ tabsChange ~ periodActive.value:", periodActive.value)
 
+  refreshData();
 }
 
 const handleDeleteRecord = (id: number) => {
@@ -86,14 +97,27 @@ const clearRecord = async () => {
   } finally {
     deleteDisabled.value = false;
     refreshData();
+    getPeriodsList();
   }
 };
 
+// 获取用户列表
 const userList = ref<User[]>([]);
 const getUserList = async () => {
   try {
     const data = await $apiFetch<ApiResponse<User[]>>("user/users");
     userList.value = data.data || [];
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const periodsList = ref<number[]>([]);
+// 获取期数列表
+const getPeriodsList = async () => {
+  try {
+    const data = await $apiFetch<ApiResponse<number[]>>("periods");
+    periodsList.value = data.data || [];
   } catch (err) {
     console.error(err);
   }
@@ -107,6 +131,7 @@ const refreshData = () => {
 
 onMounted(() => {
   getUserList();
+  getPeriodsList();
 });
 
 const dateFilter = (date: string) => {
@@ -160,16 +185,21 @@ const typeFilter = (value: TransactionType) => {
         <el-tab-pane label="本期" :name="0"></el-tab-pane>
         <el-tab-pane label="往期" :name="1"></el-tab-pane>
       </el-tabs>
-      <div>
-        <!-- <el-select v-model="value" placeholder="Select" style="width: 240px">
-          <el-option
-            v-for="item in options"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select> -->
-      </div>
+
+      <template v-if="tabsActive === 1">
+        <div class="mb-12">
+          <el-select v-model="periodActive" placeholder="请选择期数">
+            <template v-for="(item, index) in periodsList">
+              <el-option
+                v-if="index + 1 === periodsList.length"
+                :label="`第 ${item} 期`"
+                :value="item"
+              />
+            </template>
+            
+          </el-select>
+        </div>
+      </template>
       <el-row v-if="recordList && recordList.length" :gutter="10">
         <el-col v-for="item in recordList" :xs="24" :sm="12" :md="8" :lg="6">
           <el-card
