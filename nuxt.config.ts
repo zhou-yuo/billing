@@ -27,6 +27,14 @@ export default defineNuxtConfig({
   hub: {
     database: true
   },
+  nitro: {
+    storage: {
+      kv: {
+        driver: 'fs',
+        base: './.data/kv'
+      }
+    }
+  },
   devServer: {
     port: 8888
   },

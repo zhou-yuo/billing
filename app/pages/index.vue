@@ -141,9 +141,9 @@ const dateFilter = (date: string) => {
 
 const billingModalVisible = ref(false);
 const billingSubmit = () => {
-  refreshData()
   tabsActive.value = 0
   periodActive.value = '';
+  refreshData()
   scrollToId('pageHeader');
 }
 
@@ -194,18 +194,21 @@ const typeFilter = (value: TransactionType) => {
       </el-tabs>
 
       <template v-if="tabsActive === 1">
-        <div class="mb-12">
-          <el-select v-model="periodActive" placeholder="请选择期数" @change="periodChange">
-            <template v-for="(item, index) in periodsList">
-              <!-- 不需要显示 本期 option -->
-              <el-option
-                v-if="index !== 0"
-                :label="`第 ${item} 期`"
-                :value="item"
-              />
-            </template>
-            
-          </el-select>
+        <div class="mb-12 flex items-center">
+          <label class="period-label">期数：</label>
+          <div class="flex-1 overflow-hidden">
+            <el-select v-model="periodActive" placeholder="请选择期数" @change="periodChange" style="width: 100%; max-width: 400px;">
+              <template v-for="(item, index) in periodsList">
+                <!-- 不需要显示 本期 option -->
+                <el-option
+                  v-if="index !== 0"
+                  :label="`第 ${item} 期`"
+                  :value="item"
+                />
+              </template>
+            </el-select>
+          </div>
+          
         </div>
       </template>
       <el-row v-if="recordList && recordList.length" :gutter="10">
@@ -241,6 +244,12 @@ const typeFilter = (value: TransactionType) => {
                   {{ item.creatorName }}
                 </div>
               </li> -->
+              <li v-if="tabsActive === 1" class="record-info-item">
+                <div class="record-info-label">清空人：</div>
+                <div class="record-info-value">
+                  {{ item.settledByName || ''}}
+                </div>
+              </li>
               <li class="record-info-item">
                 <div class="record-info-label">日期：</div>
                 <div class="record-info-value">
@@ -324,6 +333,10 @@ const typeFilter = (value: TransactionType) => {
       top: 0;
       border-radius: 1px;
     }
+  }
+  .period-label {
+    color: #666;
+    flex-shrink: 0;
   }
 }
 </style>

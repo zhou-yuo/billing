@@ -3,6 +3,7 @@ import { ref } from "vue"
 import type { ApiResponse } from "~/types/apiResponse";
 import type { User } from "~/types/user";
 const { $apiFetch } = useNuxtApp();
+const router = useRouter()
 
 const { login } = useAuth();
 
@@ -28,6 +29,7 @@ const handleLogin = async () => {
     });
     console.log("🚀 ~ handleLogin ~ data:", data)
     login(inputId.value.trim());
+    router.replace('/')
   } catch (err) {
     ElMessage.warning('登录失败')
     console.error(err);

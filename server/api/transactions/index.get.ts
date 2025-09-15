@@ -50,6 +50,7 @@ export default defineEventHandler(async (event) => {
       // 这样做比直接替换ID更好，因为前端有时可能仍需要ID
       return {
         ...t, // 保留所有原始交易字段
+        settledByName: t.settledByUid ? userMap[t.settledByUid.toString()] : null,
         creatorName: userMap[t.creatorUid.toString()] || '未知用户',
         payerName: userMap[t.payerId.toString()] || '未知用户',
         lenderName: t.lenderId ? userMap[t.lenderId.toString()] : null,

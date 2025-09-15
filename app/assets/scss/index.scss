@@ -100,6 +100,10 @@ a {
   display: flex;
 }
 
+.flex-1 {
+  flex: 1;
+}
+
 .items-center {
   align-items: center;
 }
@@ -142,4 +146,8 @@ a {
 
 .amount-color {
   color: var(--amount-color);
+}
+
+.overflow-hidden {
+  overflow: hidden;
 }
