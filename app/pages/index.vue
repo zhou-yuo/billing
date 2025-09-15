@@ -149,7 +149,7 @@ const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
     <div class="section-title">记录</div>
 
     <div>
-      <el-row v-if="recordList" :gutter="10">
+      <el-row v-if="recordList && recordList.length" :gutter="10">
         <el-col v-for="item in recordList" :xs="24" :sm="12" :md="8" :lg="6">
           <el-card
             class="mb-12"
@@ -201,6 +201,7 @@ const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
           </el-card>
         </el-col>
       </el-row>
+      <el-empty v-else />
     </div>
 
     <BillingModal
@@ -246,6 +247,18 @@ const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
     font-weight: bold;
     margin: 20px 0 10px;
     padding: 0 10px;
+    position: relative;
+    &::after {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 100%;
+      background-color: var(--el-color-primary);
+      position: absolute;
+      left: 0;
+      top: 0;
+      border-radius: 1px;
+    }
   }
 }
 </style>
