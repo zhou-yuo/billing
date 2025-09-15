@@ -18,6 +18,7 @@ export default defineNuxtConfig({
     },
   },
   hub: {
+    remote: true,
     database: true
   },
   devServer: {

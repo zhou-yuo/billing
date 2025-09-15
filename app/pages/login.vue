@@ -27,7 +27,7 @@ const handleLogin = () => {
   <div class="login-page">
     <div class="login-content">
       <p class="login-title">登录</p>
-      <el-input v-model="inputId" style="width: 100%" placeholder="请输入账号" size="large" maxlength="20"/>
+      <el-input v-model="inputId" style="width: 100%" placeholder="请输入账号" size="large" maxlength="20" @keyup.enter="handleLogin" />
       <el-button type="primary" class="login-btn" size="large" @click="handleLogin">登录</el-button>
     </div>
   </div>
