@@ -21,7 +21,7 @@ const summaryListPromise = useApiFetch<ApiResponse<Summary[]>>(() => `transactio
 
 // 使用 Promise.all 一次性等待所有请求完成。
 const [
-  { data: recordListRes, refresh: recordListRefresh },
+  { data: recordListRes, pending: recordListPending, refresh: recordListRefresh },
   { data: summaryListRes, refresh: summaryListRefresh }
 ] = await Promise.all([
   recordListPromise,
@@ -41,7 +41,6 @@ const tabsChange = (e: any) => {
   } else {
     periodActive.value = ''
   }
-  console.log("🚀 ~ tabsChange ~ periodActive.value:", periodActive.value)
 
   refreshData();
 }
@@ -122,11 +121,13 @@ const getPeriodsList = async () => {
     console.error(err);
   }
 };
+const periodChange = (value: number) => {
+  refreshData();
+}
 
 const refreshData = () => {
   recordListRefresh();
   summaryListRefresh();
-  scrollToId('pageHeader');
 };
 
 onMounted(() => {
@@ -139,6 +140,12 @@ const dateFilter = (date: string) => {
 };
 
 const billingModalVisible = ref(false);
+const billingSubmit = () => {
+  refreshData()
+  tabsActive.value = 0
+  periodActive.value = '';
+  scrollToId('pageHeader');
+}
 
 const typeFilter = (value: TransactionType) => {
   const map = {
@@ -156,7 +163,7 @@ const typeFilter = (value: TransactionType) => {
       <el-button type="primary" @click="billingModalVisible = true"
         >添加账单</el-button
       >
-      <el-button type="danger" @click="handleClearRecord"
+      <el-button type="danger" :disabled="recordList.length === 0" @click="handleClearRecord"
         >清空本期账单</el-button
       >
     </div>
@@ -180,7 +187,7 @@ const typeFilter = (value: TransactionType) => {
     
     <div class="section-title">记录</div>
 
-    <div>
+    <div v-loading="recordListPending">
       <el-tabs v-model="tabsActive" @tab-click="tabsChange">
         <el-tab-pane label="本期" :name="0"></el-tab-pane>
         <el-tab-pane label="往期" :name="1"></el-tab-pane>
@@ -188,10 +195,11 @@ const typeFilter = (value: TransactionType) => {
 
       <template v-if="tabsActive === 1">
         <div class="mb-12">
-          <el-select v-model="periodActive" placeholder="请选择期数">
+          <el-select v-model="periodActive" placeholder="请选择期数" @change="periodChange">
             <template v-for="(item, index) in periodsList">
+              <!-- 不需要显示 本期 option -->
               <el-option
-                v-if="index + 1 === periodsList.length"
+                v-if="index !== 0"
                 :label="`第 ${item} 期`"
                 :value="item"
               />
@@ -265,7 +273,7 @@ const typeFilter = (value: TransactionType) => {
       v-if="billingModalVisible"
       :userList="userList"
       @closed="billingModalVisible = false"
-      @submit="refreshData"
+      @submit="billingSubmit"
     />
   </div>
 </template>

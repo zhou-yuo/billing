@@ -8,13 +8,18 @@ export const useAuth = () => {
   // 登录函数：设置 cookie 值
   const login = (id: string) => {
     if (!id) return;
+    const router = useRouter();
     userId.value = id;
+    router.replace('/');
   };
 
   // 登出函数：清除 cookie
-  const logout = () => {
+  const logout = (toLoginPage: boolean = true) => {
     userId.value = null;
-    navigateTo('/login');
+    if(toLoginPage) {
+      const router = useRouter();
+      router.replace('/login');
+    }
   };
 
   // 计算属性，方便判断是否已登录

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref } from "vue"
+import type { ApiResponse } from "~/types/apiResponse";
+import type { User } from "~/types/user";
+const { $apiFetch } = useNuxtApp();
+
 const { login } = useAuth();
-const router = useRouter();
 
 definePageMeta({
   layout: 'blank'
@@ -9,16 +12,28 @@ definePageMeta({
 
 const inputId = ref('')
 
-const handleLogin = () => {
+const loginLoading = ref(false)
+const handleLogin = async () => {
   if(!inputId.value) {
     ElMessage.warning('请输入账号')
     return
   }
-
-  login(inputId.value.trim());
-
-  // 2. 校验成功后，跳转到首页或用户之前想访问的页面
-  router.push('/');
+  try {
+    loginLoading.value = true
+    const data = await $apiFetch<ApiResponse<User>>("login", {
+      method: 'post',
+      body: {
+        userId: inputId.value
+      }
+    });
+    console.log("🚀 ~ handleLogin ~ data:", data)
+    login(inputId.value.trim());
+  } catch (err) {
+    ElMessage.warning('登录失败')
+    console.error(err);
+  } finally {
+    loginLoading.value = false
+  }
 }
 
 </script>
@@ -28,7 +43,7 @@ const handleLogin = () => {
     <div class="login-content">
       <p class="login-title">登录</p>
       <el-input v-model="inputId" style="width: 100%" placeholder="请输入账号" size="large" maxlength="20" @keyup.enter="handleLogin" />
-      <el-button type="primary" class="login-btn" size="large" @click="handleLogin">登录</el-button>
+      <el-button type="primary" class="login-btn" size="large" :loading="loginLoading" @click="handleLogin">登录</el-button>
     </div>
   </div>
 </template>

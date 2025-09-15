@@ -20,7 +20,6 @@ export default defineNuxtPlugin((_nuxtApp) => {
     onResponseError({ request, response, options }) {
       // 在这里统一处理错误
       console.error('[fetch response error]', response.status, response._data)
-
       if (import.meta.client) {
         // 在客户端可以进行一些提示或重定向操作
         if (response.status === 401 || response.status === 403) {

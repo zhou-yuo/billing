@@ -35,12 +35,13 @@ export default defineEventHandler(async (event) => {
         eq(tables.transactions.period, currentPeriod)
       )); // 条件：只更新当前未结清的记录
 
-    const newPeriod = await incrementCurrentPeriod();
+    // 增加期数
+    await incrementCurrentPeriod();
     // 返回成功的响应
     // 默认状态码为 200 OK
     return {
       status: 200,
-      msg: '第 ${currentPeriod} 期已成功结算！下一期是第 ${newPeriod} 期。',
+      msg: `已成功结算`,
     };
 
   } catch (err) {

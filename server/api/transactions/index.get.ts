@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       status: 200,
-      msg: 'success',
+      msg: `成功查询第 ${targetPeriod} 期的记录`,
       data: transformedTransactions // 4. 返回转换后的数据
     };
   } catch (err) {
