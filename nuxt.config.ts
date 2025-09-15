@@ -30,8 +30,8 @@ export default defineNuxtConfig({
   nitro: {
     storage: {
       kv: {
-        driver: 'fs',
-        base: './.data/kv'
+        driver: 'cloudflare-kv-binding',
+        binding: 'kv'
       }
     }
   },
