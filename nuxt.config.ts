@@ -25,15 +25,8 @@ export default defineNuxtConfig({
     },
   },
   hub: {
+    kv: true,
     database: true
-  },
-  nitro: {
-    storage: {
-      kv: {
-        driver: 'cloudflare-kv-binding',
-        binding: 'kv'
-      }
-    }
   },
   devServer: {
     port: 8888
