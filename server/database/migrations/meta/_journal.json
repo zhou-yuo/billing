@@ -43,6 +43,13 @@
       "when": 1757923594644,
       "tag": "0005_petite_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1757940906190,
+      "tag": "0006_bitter_omega_sentinel",
+      "breakpoints": true
     }
   ]
 }

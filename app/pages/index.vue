@@ -48,7 +48,7 @@ const handleClearRecord = () => {
 const clearRecord = async () => {
   try {
     deleteDisabled.value = true;
-    await $apiFetch<ApiResponse<Summary[]>>(`transactions/clear`, {
+    await $apiFetch<ApiResponse<Summary[]>>(`transactions/settle`, {
       method: "post",
     });
     ElMessage.success("所有账单记录已清空");

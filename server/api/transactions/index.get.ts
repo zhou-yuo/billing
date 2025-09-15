@@ -10,6 +10,7 @@ export default defineEventHandler(async () => {
       db
         .select()
         .from(tables.transactions)
+        .where(eq(tables.transactions.status, 0)) // 只查询未结清的记录
         .orderBy(desc(tables.transactions.createdAt)), // 按最新时间排序
       
       db

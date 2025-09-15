@@ -1,5 +1,28 @@
 export default defineEventHandler(async (event) => {
+  const creatorUid = getHeader(event, 'x-user-id');
+
+  // 2. 增加对操作人ID的校验
+  if (!creatorUid) {
+    throw createError({ statusCode: 401, statusMessage: 'Unauthorized: User ID is missing from headers.' });
+  }
+
   const body = await readBody(event);
+
+  if (!body.amount) {
+    throw createError({ statusCode: 400, statusMessage: 'Amount is required.' });
+  }
+
+  if (!body.type) {
+    throw createError({ statusCode: 400, statusMessage: 'Type is required.' });
+  }
+
+  if (!body.payerId) {
+    throw createError({ statusCode: 400, statusMessage: 'Payer ID is required.' });
+  }
+
+  if (!body.participants || !body.participants.length) {
+    throw createError({ statusCode: 400, statusMessage: 'Participants is required.' });
+  }
 
   if (!body.description || typeof body.description !== 'string') {
     throw createError({ statusCode: 400, statusMessage: 'Description is required and must be a string.' });
@@ -7,9 +30,7 @@ export default defineEventHandler(async (event) => {
   if (!body.transactionDate || isNaN(new Date(body.transactionDate).getTime())) {
     throw createError({ statusCode: 400, statusMessage: 'A valid transaction date is required.' });
   }
-  if (!body.payerId) {
-    throw createError({ statusCode: 400, statusMessage: 'Payer ID is required.' });
-  }
+  
 
   // NEW: Call useDrizzle() to get the db instance for this request
   const db = useDrizzle()
@@ -23,6 +44,9 @@ export default defineEventHandler(async (event) => {
     type: body.type,
     borrowerId: body.borrowerId,
     lenderId: body.lenderId,
+    creatorUid: creatorUid, // 从 header 获取
+    status: 0,             // 默认状态为 0 (未结清)
+    settledByUid: null,    // 结清人默认为 null
     createdAt: new Date(),
   }).returning();
 

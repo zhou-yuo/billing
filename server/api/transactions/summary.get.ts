@@ -15,7 +15,9 @@ export default defineEventHandler(
 
       // 1. 并发查询所有交易 和 所有用户信息（ID 和 Name）
       const [allTransactions, allUsers] = await Promise.all([
-        db.select().from(tables.transactions),
+        db.select().from(tables.transactions)
+        // 只统计未结清的记录
+        .where(eq(tables.transactions.status, 0)),
         db
           .select({
             id: tables.users.id,

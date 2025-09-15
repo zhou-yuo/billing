@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     return;
   }
   
-  const publicApiRoutes = ['/api/public-info']; // 白名单
+  const publicApiRoutes = ['/api/login']; // 白名单
   if (publicApiRoutes.includes(path)) {
     return;
   }

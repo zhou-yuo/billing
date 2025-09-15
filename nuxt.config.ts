@@ -13,10 +13,14 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'zh-CN',
       },
-      title: 'Billing',
+      title: '账单',
       meta: [
         // 禁用双击放大和缩放
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
       ]
     },
   },
