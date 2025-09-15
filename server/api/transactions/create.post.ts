@@ -1,3 +1,5 @@
+import { getCurrentPeriod } from "~~/server/utils/period";
+
 export default defineEventHandler(async (event) => {
   const creatorUid = getHeader(event, 'x-user-id');
 
@@ -35,6 +37,9 @@ export default defineEventHandler(async (event) => {
   // NEW: Call useDrizzle() to get the db instance for this request
   const db = useDrizzle()
 
+  // 获取当前期数 
+  const currentPeriod = await getCurrentPeriod();
+
   const [newTransaction] = await db.insert(tables.transactions).values({
     description: body.description,
     amount: body.amount,
@@ -47,6 +52,7 @@ export default defineEventHandler(async (event) => {
     creatorUid: creatorUid, // 从 header 获取
     status: 0,             // 默认状态为 0 (未结清)
     settledByUid: null,    // 结清人默认为 null
+    period: currentPeriod,  // 设置期数字段
     createdAt: new Date(),
   }).returning();
 

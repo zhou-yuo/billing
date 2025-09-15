@@ -4,7 +4,7 @@ import { ref } from "vue"
 </script>
 
 <template>
-  <div class="page-header">
+  <div id="pageHeader" class="page-header">
     <div class="page-header-main">
       账单
     </div>

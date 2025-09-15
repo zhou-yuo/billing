@@ -1,16 +1,31 @@
 // server/api/transactions/index.get.ts
 import { desc } from 'drizzle-orm';
+import { getCurrentPeriod } from '~~/server/utils/period';
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
   try {
+    const query = getQuery(event);
+    // 从查询参数中获取期数，并转换为数字
+    const queryPeriod = query.period ? parseInt(query.period as string, 10) : null;
+
     const db = useDrizzle();
 
-    // 1. 并发查询所有交易记录 和 所有用户信息
+    // 决定要查询的期数
+    // 如果前端传了期数，就用它；否则，就去获取当前最新期数
+    const targetPeriod = queryPeriod || await getCurrentPeriod();
+    
+    // 检查 targetPeriod 是否有效
+    if (isNaN(targetPeriod)) {
+      throw createError({ statusCode: 400, statusMessage: 'Invalid period format.' });
+    }
+
+    // 并发查询所有交易记录 和 所有用户信息
     const [allTransactions, allUsers] = await Promise.all([
       db
         .select()
         .from(tables.transactions)
-        .where(eq(tables.transactions.status, 0)) // 只查询未结清的记录
+        // 查询特定期数的记录
+        .where(eq(tables.transactions.period, targetPeriod))
         .orderBy(desc(tables.transactions.createdAt)), // 按最新时间排序
       
       db

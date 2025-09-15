@@ -1,5 +1,6 @@
 // server/api/summary.get.ts
 import { ApiResponse } from "~/types/apiResponse";
+import { getCurrentPeriod } from "~~/server/utils/period";
 
 // 定义返回数据项的类型
 interface UserSummary {
@@ -9,15 +10,27 @@ interface UserSummary {
 }
 
 export default defineEventHandler(
-  async (): Promise<ApiResponse<UserSummary[] | []>> => {
+  async (event): Promise<ApiResponse<UserSummary[] | []>> => {
     try {
+      const query = getQuery(event);
+      // 从查询参数中获取期数，并转换为数字
+      const queryPeriod = query.period ? parseInt(query.period as string, 10) : null;
+  
       const db = useDrizzle();
+
+      // 决定要查询的期数
+      // 如果前端传了期数，就用它；否则，就去获取当前最新期数
+      const targetPeriod = queryPeriod || await getCurrentPeriod();
+      
+      // 检查 targetPeriod 是否有效
+      if (isNaN(targetPeriod)) {
+        throw createError({ statusCode: 400, statusMessage: 'Invalid period format.' });
+      }
 
       // 1. 并发查询所有交易 和 所有用户信息（ID 和 Name）
       const [allTransactions, allUsers] = await Promise.all([
         db.select().from(tables.transactions)
-        // 只统计未结清的记录
-        .where(eq(tables.transactions.status, 0)),
+        .where(eq(tables.transactions.period, targetPeriod)), // 只统计目标期数的账单
         db
           .select({
             id: tables.users.id,
@@ -26,13 +39,13 @@ export default defineEventHandler(
           .from(tables.users),
       ]);
 
-      // 2. 初始化一个以用户ID为键的余额记录对象
+      // 初始化一个以用户ID为键的余额记录对象
       const balances: Record<string, number> = {};
       allUsers.forEach((user) => {
         balances[user.id] = 0;
       });
 
-      // 3. 遍历交易，计算每个ID的精确余额 (这部分逻辑保持不变)
+      // 遍历交易，计算每个ID的精确余额 (这部分逻辑保持不变)
       allTransactions.forEach((t) => {
         // 为确保健壮性，我们检查参与者是否存在于我们的用户列表中
         if (
@@ -66,7 +79,7 @@ export default defineEventHandler(
         }
       });
 
-      // 4. 构建并返回最终结果
+      // 构建并返回最终结果
       // 遍历 allUsers 数组（这是我们用户信息的“真实来源”）
       // 然后从 balances 对象中查找计算出的余额
       const summaryResult: UserSummary[] = allUsers.map((user) => {
@@ -83,7 +96,7 @@ export default defineEventHandler(
       // return summaryResult;
       return {
         status: 200,
-        msg: `success`,
+        msg: `成功统计第 ${targetPeriod} 期的收支`,
         data: summaryResult,
       };
     } catch (err) {

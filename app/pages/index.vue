@@ -29,6 +29,12 @@ const recordList = computed(() => recordListRes.value?.data || [])
 // 统计列表
 const summaryList = computed(() => summaryListRes.value?.data || []) 
 
+const tabsActive = ref(0)
+const tabsChange = (e: any) => {
+console.log("🚀 ~ tabsChange ~ e:", e)
+
+}
+
 const handleDeleteRecord = (id: number) => {
   ElMessageBox.confirm("是否确认删除该条记录?", "提示", {
     confirmButtonText: "确认",
@@ -94,8 +100,9 @@ const getUserList = async () => {
 };
 
 const refreshData = () => {
-  recordListRefresh()
+  recordListRefresh();
   summaryListRefresh();
+  scrollToId('pageHeader');
 };
 
 onMounted(() => {
@@ -149,6 +156,20 @@ const typeFilter = (value: TransactionType) => {
     <div class="section-title">记录</div>
 
     <div>
+      <el-tabs v-model="tabsActive" @tab-click="tabsChange">
+        <el-tab-pane label="本期" :name="0"></el-tab-pane>
+        <el-tab-pane label="往期" :name="1"></el-tab-pane>
+      </el-tabs>
+      <div>
+        <!-- <el-select v-model="value" placeholder="Select" style="width: 240px">
+          <el-option
+            v-for="item in options"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select> -->
+      </div>
       <el-row v-if="recordList && recordList.length" :gutter="10">
         <el-col v-for="item in recordList" :xs="24" :sm="12" :md="8" :lg="6">
           <el-card

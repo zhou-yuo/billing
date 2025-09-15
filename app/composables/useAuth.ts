@@ -2,8 +2,8 @@
 
 export const useAuth = () => {
   // 创建一个响应式的 cookie，名为 'user-id'
-  // maxAge: 7200 秒 = 2 小时
-  const userId = useCookie<string | null>('user-id', { maxAge: 7200 });
+  // maxAge: 600 秒 = 10 分钟
+  const userId = useCookie<string | null>('user-id', { maxAge: 600 });
 
   // 登录函数：设置 cookie 值
   const login = (id: string) => {

@@ -33,6 +33,9 @@ export const transactions = sqliteTable('transactions', {
   // 结清人UID：记录这笔账是谁操作结清的，默认为 NULL
   settledByUid: text('settled_by_uid').references(() => users.id),
 
+  // 期数
+  period: integer('period').notNull(),
+
   // 用户选择的时间
   transactionDate: integer('transaction_date', { mode: 'timestamp' }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(new Date()),
