@@ -48,3 +48,18 @@ export default defineNuxtPlugin((_nuxtApp) => {
     }
   }
 })
+
+// 使用示例
+// <script setup lang="ts">
+// const { $apiFetch } = useNuxtApp()
+
+// async function fetchData() {
+//   try {
+//     const data = await $apiFetch('/users/1')
+//     console.log(data)
+//   } catch (error) {
+//     // 即使有全局错误处理，局部也可以进行捕获处理
+//     console.error('组件内捕获到错误:', error)
+//   }
+// }
+// </script>

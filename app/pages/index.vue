@@ -7,6 +7,28 @@ import dayjs from "dayjs";
 const { $apiFetch } = useNuxtApp();
 const { userId } = useAuth()
 
+// 获取记录列表
+const recordListPromise = useApiFetch<ApiResponse<Transaction[]>>("transactions", {
+  key: 'transactions-list',
+});
+// 获取统计列表
+const summaryListPromise = useApiFetch<ApiResponse<Summary[]>>("transactions/summary", {
+  key: 'transactions-summary',
+});
+
+// 使用 Promise.all 一次性等待所有请求完成。
+const [
+  { data: recordListRes, refresh: recordListRefresh },
+  { data: summaryListRes, refresh: summaryListRefresh }
+] = await Promise.all([
+  recordListPromise,
+  summaryListPromise
+]);
+// 记录列表
+const recordList = computed(() => recordListRes.value?.data || [])
+// 统计列表
+const summaryList = computed(() => summaryListRes.value?.data || []) 
+
 const handleDeleteRecord = (id: number) => {
   ElMessageBox.confirm("是否确认删除该条记录?", "提示", {
     confirmButtonText: "确认",
@@ -29,7 +51,7 @@ const deleteRecordItem = async (id: number) => {
     console.error(err);
   } finally {
     deleteDisabled.value = false;
-    init();
+    refreshData();
   }
 };
 
@@ -57,7 +79,7 @@ const clearRecord = async () => {
     console.error(err);
   } finally {
     deleteDisabled.value = false;
-    init();
+    refreshData();
   }
 };
 
@@ -71,36 +93,13 @@ const getUserList = async () => {
   }
 };
 
-const recordList = ref<Transaction[]>([]);
-const getRecordList = async () => {
-  try {
-    const data = await $apiFetch<ApiResponse<Transaction[]>>("transactions");
-    recordList.value = data.data || [];
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-const summaryList = ref<Summary[]>([]);
-const getSummaryList = async () => {
-  try {
-    const data = await $apiFetch<ApiResponse<Summary[]>>(
-      "transactions/summary"
-    );
-    summaryList.value = data.data || [];
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-const init = () => {
-  getRecordList();
-  getSummaryList();
+const refreshData = () => {
+  recordListRefresh()
+  summaryListRefresh();
 };
 
 onMounted(() => {
   getUserList();
-  init();
 });
 
 const dateFilter = (date: string) => {
@@ -146,11 +145,11 @@ const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
         </ul>
       </el-card>
     </div>
-
+    
     <div class="section-title">记录</div>
 
     <div>
-      <el-row v-if="recordList && recordList.length" :gutter="10">
+      <el-row v-if="recordList" :gutter="10">
         <el-col v-for="item in recordList" :xs="24" :sm="12" :md="8" :lg="6">
           <el-card
             class="mb-12"
@@ -208,7 +207,7 @@ const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
       v-if="billingModalVisible"
       :userList="userList"
       @closed="billingModalVisible = false"
-      @submit="init"
+      @submit="refreshData"
     />
   </div>
 </template>
