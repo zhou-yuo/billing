@@ -7,10 +7,8 @@ const periodKey = 'current-period'
 
 export async function getCurrentPeriod(): Promise<number> {
   const hasPeriod = await hubKV().has(periodKey)
-  console.log("🚀 ~ getCurrentPeriod ~ hasPeriod:", hasPeriod)
   if(hasPeriod) {
     const hubkvPeriod = await hubKV().get<number>(periodKey);
-    console.log("🚀 ~ getCurrentPeriod ~ hubkvPeriod:", hubkvPeriod)
     return hubkvPeriod!;
   } else {
     await hubKV().set(periodKey, 1);
@@ -39,10 +37,8 @@ export async function incrementCurrentPeriod(): Promise<number> {
   // const currentPeriod = await getCurrentPeriod(); // 获取当前期数
   let currentPeriod = 1;
   const hasPeriod = await hubKV().has(periodKey)
-  console.log("🚀 ~ incrementCurrentPeriod ~ hasPeriod:", hasPeriod)
   if(hasPeriod) {
     const hubkvPeriod = await hubKV().get<number>(periodKey);
-    console.log("🚀 ~ incrementCurrentPeriod ~ hubkvPeriod:", hubkvPeriod)
     currentPeriod = hubkvPeriod!;
   }
   const newPeriod = currentPeriod + 1;

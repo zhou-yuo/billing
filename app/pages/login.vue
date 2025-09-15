@@ -27,7 +27,6 @@ const handleLogin = async () => {
         userId: inputId.value
       }
     });
-    console.log("🚀 ~ handleLogin ~ data:", data)
     login(inputId.value.trim());
     router.replace('/')
   } catch (err) {

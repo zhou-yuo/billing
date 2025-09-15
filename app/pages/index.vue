@@ -246,7 +246,7 @@ const typeFilter = (value: TransactionType) => {
               </li> -->
               <li v-if="tabsActive === 1" class="record-info-item">
                 <div class="record-info-label">清空人：</div>
-                <div class="record-info-value">
+                <div class="record-info-value color-warning">
                   {{ item.settledByName || ''}}
                 </div>
               </li>
