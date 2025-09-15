@@ -5,6 +5,7 @@ import type { User } from "~/types/user";
 import type { Summary, Transaction } from "~/types/record";
 import dayjs from "dayjs";
 const { $apiFetch } = useNuxtApp();
+const { userId } = useAuth()
 
 const handleDeleteRecord = (id: number) => {
   ElMessageBox.confirm("是否确认删除该条记录?", "提示", {
@@ -192,7 +193,7 @@ const typeFilter = (value: 'expense' | 'loan' | 'repayment') => {
                 <el-button
                   type="danger"
                   link
-                  :disabled="deleteDisabled"
+                  :disabled="deleteDisabled || item.creatorUid !== userId"
                   @click="handleDeleteRecord(item.id)"
                   >删除</el-button
                 >

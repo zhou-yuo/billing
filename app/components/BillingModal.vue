@@ -3,6 +3,7 @@ import type { FormInstance } from "element-plus"
 import dayjs from 'dayjs';
 import { ref, computed, reactive } from "vue"
 import type { User } from "~/types/user";
+const { userId } = useAuth()
 
 const { $apiFetch } = useNuxtApp()
 
@@ -30,6 +31,7 @@ const form = reactive({
 })
 
 onMounted(() => {
+  form.payerId = userId.value || '';
   form.date = dayjs().format('YYYY-MM-DD')
 });
 
@@ -141,6 +143,23 @@ const onSubmit = async () => {
   }
 }
 
+// 受益人 disabled
+const participantsCheckboxDisable = (item: User) => {
+  try {
+    if(form.type === 'loan' || form.type === 'repayment') {
+      // 借款 或 还款时，受益人不能是自己；
+      if(item.id === userId.value) {
+        return true
+      }
+      // 借款 或 还款 时，受益人只能选一个
+      return form.participants.length > 0 && !form.participants.includes(item.id)
+    }
+  } catch(err) {
+    return false
+  }
+  return false
+}
+
 </script>
 
 <template>
@@ -172,7 +191,7 @@ const onSubmit = async () => {
           <el-form-item label="付款人：" prop="payerId">
             <el-radio-group v-model="form.payerId">
               <template v-for="item in userList">
-                <el-radio :value="item.id">{{ item.name }}</el-radio>
+                <el-radio :value="item.id" :disabled="item.id !== userId">{{ item.name }}</el-radio>
               </template>
             </el-radio-group>
           </el-form-item>
@@ -181,7 +200,7 @@ const onSubmit = async () => {
               <template v-for="item in userList">
                 <el-checkbox 
                   :label="item.id" 
-                  :disabled="(form.type == 'loan' || form.type == 'repayment') && form.participants.length > 0 && !form.participants.includes(item.id)"
+                  :disabled="participantsCheckboxDisable(item)"
                 >{{ item.name }}</el-checkbox>
               </template>
             </el-checkbox-group>
