@@ -155,6 +155,10 @@ const typeFilter = (value: TransactionType) => {
   }
   return map[value]
 }
+
+const deleteItemDisabled = (item: Transaction) => {
+  return deleteDisabled.value || item.creatorUid !== userId.value
+}
 </script>
 
 <template>
@@ -222,7 +226,10 @@ const typeFilter = (value: TransactionType) => {
             <ul>
               <li class="record-info-item">
                 <div class="record-info-label">金额：</div>
-                <div class="record-info-value">${{ item.amount }}</div>
+                <div class="record-info-value amount-color">
+                  <span>${{ item.amount }}</span>
+                  <span v-if="item.type === 'expense'">（${{ (item.amount/item.participantsNames.length).toFixed(2) }}/人）</span>
+                </div>
               </li>
               <li class="record-info-item">
                 <div class="record-info-label">类型：</div>
@@ -264,9 +271,9 @@ const typeFilter = (value: TransactionType) => {
             <template #footer>
               <div class="flex items-center justify-end">
                 <el-button
-                  type="danger"
+                  :type="deleteItemDisabled(item) ? 'info' : 'danger'"
                   link
-                  :disabled="deleteDisabled || item.creatorUid !== userId"
+                  :disabled="deleteItemDisabled(item)"
                   @click="handleDeleteRecord(item.id)"
                   >删除</el-button
                 >
