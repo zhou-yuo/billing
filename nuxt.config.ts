@@ -28,6 +28,12 @@ export default defineNuxtConfig({
     kv: true,
     database: true
   },
+  nitro: {
+    experimental: {
+      // 填充数据库(实验性功能)
+      tasks: true
+    }
+  },
   devServer: {
     port: 8888
   },

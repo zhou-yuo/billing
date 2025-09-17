@@ -29,7 +29,6 @@ const handleLogin = async () => {
     });
     login(userId);
   } catch (err) {
-    ElMessage.warning('登录失败')
     console.error(err);
   } finally {
     loginLoading.value = false
