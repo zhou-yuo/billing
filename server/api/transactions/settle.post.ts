@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     const settledByUid = getHeader(event, 'x-user-id');
 
     if (!settledByUid) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized: User ID is missing from headers.' });
+      throw createError({ statusCode: 401, statusMessage: '未授权：标头中缺少用户ID' });
     }
     
     //  获取 Drizzle 实例
@@ -46,11 +46,9 @@ export default defineEventHandler(async (event) => {
 
   } catch (err) {
     // 处理可能发生的数据库错误
-    console.error('Error clearing transactions table:', err);
-    setResponseStatus(event, 500); // Internal Server Error
-    return {
-      status: 500,
-      msg: '清空账单时发生服务器错误。',
-    };
+    throw createError({
+      statusCode: 500, 
+      statusMessage: `${err instanceof Error ? err.message : String(err)}`,
+    });
   }
 });

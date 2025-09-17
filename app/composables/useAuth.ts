@@ -9,13 +9,14 @@ export const useAuth = () => {
   const login = (id: string) => {
     if (!id) return;
     userId.value = id;
+    navigateTo('/', { replace: true })
   };
 
   // 登出函数：清除 cookie
   const logout = (toLoginPage: boolean = true) => {
     userId.value = null;
     if(toLoginPage) {
-      navigateTo('/login')
+      navigateTo('/login', { replace: true })
     }
   };
 

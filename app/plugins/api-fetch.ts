@@ -29,7 +29,7 @@ export default defineNuxtPlugin((_nuxtApp) => {
         } else {
           // 其他错误可以显示一个全局的错误提示
           // 比如使用一个 toast 组件
-          ElMessage.error(`请求失败: ${response.status} ${response.statusText}`)
+          ElMessage.error(`请求失败: ${response._data.message}`)
         }
       }
 

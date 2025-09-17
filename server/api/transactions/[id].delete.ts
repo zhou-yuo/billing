@@ -8,11 +8,7 @@ export default defineEventHandler(async (event) => {
   try {
     const currentUserId = getHeader(event, 'x-user-id');
     if (!currentUserId) {
-      setResponseStatus(event, 401); // 401 Unauthorized
-      return {
-        status: 401,
-        msg: 'Unauthorized: User ID is missing from headers.',
-      };
+      throw createError({ statusCode: 400, statusMessage: '未授权：标头中缺少用户ID' });
     }
     
     const transactionId = event.context.params?.id;
@@ -20,22 +16,14 @@ export default defineEventHandler(async (event) => {
     // 验证 ID 是否存在
     if (!transactionId) {
       // 设置 HTTP 状态码为 400 Bad Request
-      setResponseStatus(event, 400);
-      return {
-        status: 400,
-        msg: 'Transaction ID is required.',
-      };
+      throw createError({ statusCode: 400, statusMessage: 'ID 是必需的' });
     }
 
     // 假设你的数据库 ID 是数字类型，需要将其从字符串转换为整数
     // 如果你的 ID 本来就是字符串类型（如 CUID 或 UUID），则不需要这步
     const parsedId = parseInt(transactionId, 10);
     if (isNaN(parsedId)) {
-      setResponseStatus(event, 400);
-      return {
-        status: 400,
-        msg: 'Invalid Transaction ID format. Must be a number.',
-      };
+      throw createError({ statusCode: 400, statusMessage: '无效的ID格式，必须是一个数字' });
     }
     
     const db = useDrizzle();
@@ -54,26 +42,20 @@ export default defineEventHandler(async (event) => {
     // 检查是否有记录被删除
     // 如果返回的数组是空的，说明没有找到对应ID的记录
     if (deletedTransaction.length === 0) {
-      setResponseStatus(event, 404); // 404 Not Found
-      return {
-        status: 404,
-        msg: `Transaction with ID ${parsedId} not found.`,
-      };
+      throw createError({ statusCode: 404, statusMessage: '未找到交易ID' });
     }
 
     // 返回成功响应
     // 成功时默认状态码是 200 OK，这里我们也可以明确返回一个成功消息
     return {
       status: 200,
-      msg: `Transaction with ID ${parsedId} deleted successfully.`,
+      msg: `删除成功`,
     };
 
   } catch (err) {
-    console.error('Error deleting transaction:', err);
-    setResponseStatus(event, 500); // 500 Internal Server Error
-    return {
-      status: 500,
-      msg: `An error occurred while deleting the transaction.`,
-    };
+    throw createError({
+      statusCode: 500, 
+      statusMessage: `${err instanceof Error ? err.message : String(err)}`,
+    });
   }
 });

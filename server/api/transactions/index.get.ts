@@ -1,12 +1,15 @@
 // server/api/transactions/index.get.ts
-import { desc } from 'drizzle-orm';
+import { desc, SQL } from 'drizzle-orm';
 import { getCurrentPeriod } from '~~/server/utils/period';
+import { billingType } from '~/constants/transactions';
+import type { TransactionType } from "~/types/record";
 
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event);
     // 从查询参数中获取期数，并转换为数字
     const queryPeriod = query.period ? parseInt(query.period as string, 10) : null;
+    const queryType = query.type as string | undefined;
 
     const db = useDrizzle();
 
@@ -16,7 +19,19 @@ export default defineEventHandler(async (event) => {
     
     // 检查 targetPeriod 是否有效
     if (isNaN(targetPeriod)) {
-      throw createError({ statusCode: 400, statusMessage: 'Invalid period format.' });
+      throw createError({ statusCode: 400, statusMessage: '无效期数格式' });
+    }
+
+    // 存放所有查询条件
+    const conditions: (SQL | undefined)[] = [];
+
+    // 添加必须的 period 条件
+    conditions.push(eq(tables.transactions.period, targetPeriod));
+
+    if (queryType && billingType.includes(queryType as any)) {
+      // 如果 queryType 存在且是预定义的合法类型之一，才添加此筛选条件
+      // 使用类型断言，因为我们已经用 .includes() 检查过了
+      conditions.push(eq(tables.transactions.type, queryType as TransactionType));
     }
 
     // 并发查询所有交易记录 和 所有用户信息
@@ -25,7 +40,7 @@ export default defineEventHandler(async (event) => {
         .select()
         .from(tables.transactions)
         // 查询特定期数的记录
-        .where(eq(tables.transactions.period, targetPeriod))
+        .where(and(...conditions))
         .orderBy(desc(tables.transactions.createdAt)), // 按最新时间排序
       
       db
@@ -65,10 +80,9 @@ export default defineEventHandler(async (event) => {
       data: transformedTransactions // 4. 返回转换后的数据
     };
   } catch (err) {
-    console.error('Error fetching transactions:', err); // 在服务器日志中打印详细错误
-    return {
-      status: 500,
-      msg: `An error occurred: ${err instanceof Error ? err.message : String(err)}`,
-    };
+    throw createError({
+      statusCode: 500, 
+      statusMessage: `${err instanceof Error ? err.message : String(err)}`,
+    });
   }
 });

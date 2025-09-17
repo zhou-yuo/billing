@@ -8,9 +8,9 @@ export default defineEventHandler(async () => {
       data: users
     }
   } catch(err) {
-    return {
-      status: 500,
-      msg: `${err}`,
-    }
+    throw createError({
+      statusCode: 500, 
+      statusMessage: `${err instanceof Error ? err.message : String(err)}`,
+    });
   }
 })

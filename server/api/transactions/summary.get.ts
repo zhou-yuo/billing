@@ -1,5 +1,8 @@
 // server/api/summary.get.ts
+import { SQL } from "drizzle-orm";
+import { billingType } from "~/constants/transactions";
 import { ApiResponse } from "~/types/apiResponse";
+import { TransactionType } from "~/types/record";
 import { getCurrentPeriod } from "~~/server/utils/period";
 
 // 定义返回数据项的类型
@@ -15,6 +18,7 @@ export default defineEventHandler(
       const query = getQuery(event);
       // 从查询参数中获取期数，并转换为数字
       const queryPeriod = query.period ? parseInt(query.period as string, 10) : null;
+      const queryType = query.type as string | undefined;
   
       const db = useDrizzle();
 
@@ -24,13 +28,26 @@ export default defineEventHandler(
       
       // 检查 targetPeriod 是否有效
       if (isNaN(targetPeriod)) {
-        throw createError({ statusCode: 400, statusMessage: 'Invalid period format.' });
+        throw createError({ statusCode: 400, statusMessage: '无效期数格式' });
+      }
+
+      // 存放所有查询条件
+      const conditions: (SQL | undefined)[] = [];
+  
+      // 添加必须的 period 条件
+      conditions.push(eq(tables.transactions.period, targetPeriod));
+  
+      if (queryType && billingType.includes(queryType as any)) {
+        // 如果 queryType 存在且是预定义的合法类型之一，才添加此筛选条件
+        // 使用类型断言，因为我们已经用 .includes() 检查过了
+        conditions.push(eq(tables.transactions.type, queryType as TransactionType));
       }
 
       // 1. 并发查询所有交易 和 所有用户信息（ID 和 Name）
       const [allTransactions, allUsers] = await Promise.all([
         db.select().from(tables.transactions)
-        .where(eq(tables.transactions.period, targetPeriod)), // 只统计目标期数的账单
+        .where(and(...conditions)), // 只统计目标期数的账单
+
         db
           .select({
             id: tables.users.id,
@@ -100,11 +117,10 @@ export default defineEventHandler(
         data: summaryResult,
       };
     } catch (err) {
-      return {
-        status: 500,
-        msg: `${err}`,
-        data: [],
-      };
+      throw createError({
+        statusCode: 500,
+        statusMessage: `${err instanceof Error ? err.message : String(err)}`,
+      });
     }
   }
 );

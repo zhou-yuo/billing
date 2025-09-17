@@ -3,7 +3,6 @@ import { ref } from "vue"
 import type { ApiResponse } from "~/types/apiResponse";
 import type { User } from "~/types/user";
 const { $apiFetch } = useNuxtApp();
-const router = useRouter()
 
 const { login } = useAuth();
 
@@ -21,14 +20,14 @@ const handleLogin = async () => {
   }
   try {
     loginLoading.value = true
+    const userId = inputId.value.trim();
     const data = await $apiFetch<ApiResponse<User>>("login", {
       method: 'post',
       body: {
-        userId: inputId.value
+        userId
       }
     });
-    login(inputId.value.trim());
-    router.replace('/')
+    login(userId);
   } catch (err) {
     ElMessage.warning('登录失败')
     console.error(err);
@@ -57,6 +56,30 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  // &::before {
+  //   content: "";
+  //   position: absolute;
+  //   top: 0;
+  //   left: 0;
+  //   width: 100%;
+  //   height: 100%;
+    
+  //   background-image: url('/svg/pattern-30.svg');
+  //   opacity: 0.1; /* 在这里设置背景的透明度 */
+  //   z-index: -1; /* 将伪元素置于内容层之下 */
+  // }
+  // &::after {
+  //   content: "";
+  //   position: absolute;
+  //   top: 0;
+  //   left: 0;
+  //   width: 100%;
+  //   height: 100%;
+  //   background: linear-gradient(45deg, rgba(142, 197, 252, 1.000) 0.000%, rgba(141, 211, 255, 1.000) 25.000%, rgba(161, 216, 255, 1.000) 50.000%, rgba(193, 210, 255, 1.000) 75.000%, rgba(224, 195, 255, 1.000) 100.000%);
+  
+  //   z-index: -2; /* 将伪元素置于内容层之下 */
+  // }
   .login-content {
     background-color: var(--el-bg-color);
     padding: 20px;

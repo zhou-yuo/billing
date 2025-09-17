@@ -36,12 +36,9 @@ export default defineEventHandler(async (event) => {
     };
 
   } catch (err) {
-    console.error('Error fetching periods list:', err);
-    setResponseStatus(event, 500);
-    return {
-      status: 500,
-      msg: `获取期数列表时发生错误: ${err instanceof Error ? err.message : String(err)}`,
-      data: []
-    };
+    throw createError({
+      statusCode: 500, 
+      statusMessage: `${err instanceof Error ? err.message : String(err)}`,
+    });
   }
 });

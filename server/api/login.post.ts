@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
       // Nuxt/Nitro 会自动处理这个错误并返回正确的响应
       throw createError({
         statusCode: 400, // 400 Bad Request
-        statusMessage: 'User ID is required and must be a string.',
+        statusMessage: '用户是必需的，并且必须是字符串。',
       });
     }
 
@@ -37,31 +37,21 @@ export default defineEventHandler(async (event) => {
       // 如果返回的数组是空的，说明没有找到该用户
       throw createError({
         statusCode: 404, // 404 Not Found
-        statusMessage: 'User not found. The provided User ID is invalid.',
+        statusMessage: '未找到用户，提供的用户无效',
       });
     } else {
       // 如果找到了用户，返回成功信息和用户信息
       // foundUser[0] 就是我们找到的那个用户对象
       return {
         status: 200,
-        msg: 'Login successful',
+        msg: '登录成功',
         data: foundUser[0], // 返回用户的 id 和 name
       };
     }
-
-  } catch (error: any) {
-    // 5. 捕获所有可能发生的错误
-    //    如果错误是我们主动抛出的 createError，它会保留原始的状态码
-    //    如果是其他未知错误（如数据库连接失败），则会返回 500
-    console.error('Login API error:', error);
-
-    // 如果错误本身没有状态码，就设置为 500
-    if (!error.statusCode) {
-      error.statusCode = 500;
-      error.statusMessage = 'An internal server error occurred during login.';
-    }
-
-    // 将错误信息重新抛出，让 Nitro 处理
-    throw error;
+  } catch (err) {
+    throw createError({
+      statusCode: 500, 
+      statusMessage: `${err instanceof Error ? err.message : String(err)}`,
+    });
   }
 });

@@ -8,13 +8,13 @@ export default defineEventHandler(async (event) => {
   // }
 
   try {
-    // 1. 获取 Drizzle 实例
+    // 获取 Drizzle 实例
     const db = useDrizzle();
 
-    // 2. 执行删除操作，不带 .where() 条件，这将删除表中的所有行
+    // 执行删除操作，不带 .where() 条件，这将删除表中的所有行
     await db.delete(tables.transactions);
 
-    // 3. 返回成功的响应
+    // 返回成功的响应
     // 默认状态码为 200 OK
     return {
       status: 200,
@@ -22,12 +22,10 @@ export default defineEventHandler(async (event) => {
     };
 
   } catch (err) {
-    // 4. 处理可能发生的数据库错误
-    console.error('Error clearing transactions table:', err);
-    setResponseStatus(event, 500); // Internal Server Error
-    return {
-      status: 500,
-      msg: '清空账单时发生服务器错误。',
-    };
+    // 处理可能发生的数据库错误
+    throw createError({
+      statusCode: 500,
+      statusMessage: `${err instanceof Error ? err.message : String(err)}`,
+    });
   }
 });

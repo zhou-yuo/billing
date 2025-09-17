@@ -6,16 +6,22 @@ import type { Summary, Transaction, TransactionType } from "~/types/record";
 import dayjs from "dayjs";
 const { $apiFetch } = useNuxtApp();
 const { userId } = useAuth()
+import { billingTypeMap } from '~/constants/transactions';
 
-// 选中的期数
-const periodActive = ref<number | ''>('')
+const filterForm = reactive<{
+  period: number | '',
+  type: string
+}>({
+  period: '',
+  type: '', // 账单类型 'expense'-多人消费, 'loan'-个人借款, 'repayment'-个人还款
+})
 
 // 获取记录列表
-const recordListPromise = useApiFetch<ApiResponse<Transaction[]>>(() => `transactions?period=${periodActive.value}`, {
+const recordListPromise = useApiFetch<ApiResponse<Transaction[]>>(() => `transactions?period=${ filterForm.period }&type=${ filterForm.type }`, {
   key: 'transactions-list',
 });
 // 获取统计列表
-const summaryListPromise = useApiFetch<ApiResponse<Summary[]>>(() => `transactions/summary?period=${periodActive.value}`, {
+const summaryListPromise = useApiFetch<ApiResponse<Summary[]>>(() => `transactions/summary?period=${ filterForm.period }&type=${ filterForm.type }`, {
   key: 'transactions-summary',
 });
 
@@ -32,18 +38,31 @@ const recordList = computed(() => recordListRes.value?.data || [])
 // 统计列表
 const summaryList = computed(() => summaryListRes.value?.data || []) 
 
-const tabsActive = ref(0)
+const tabsActive = ref(0);
 const tabsChange = (e: any) => {
-  if(e.props.name === 1 && periodsList.value && periodsList.value.length) {
-    // 查看往期，默认选中最后一个往期
-    // index 0是本期，要取 1;
-    periodActive.value = periodsList.value[1]!;
+  if(e.props.name === 1) {
+    // 往期
+    if(periodsList.value && periodsList.value.length > 1) {
+      // 查看往期，默认选中最后一个往期
+      // index 0是本期，要取 1;
+      filterForm.period = periodsList.value[1]!;
+    } else {
+      filterForm.period = '';
+    }
   } else {
-    periodActive.value = ''
+    filterForm.period = ''
   }
+  filterForm.type = ''
 
   refreshData();
 }
+
+const colLayout = ref({
+  xs: 24,
+  sm: 12,
+  md: 8,
+  lg: 6
+});
 
 const handleDeleteRecord = (id: number) => {
   ElMessageBox.confirm("是否确认删除该条记录?", "提示", {
@@ -51,7 +70,12 @@ const handleDeleteRecord = (id: number) => {
     cancelButtonText: "取消",
     type: "warning",
   }).then(() => {
-    deleteRecordItem(id);
+    ElMessageBox.prompt('为确认操作，请输入 "确认删除" 这四个字。', "提示", {
+      inputPattern: /^确认删除$/,
+      inputErrorMessage: "校验失败，请重新输入",
+    }).then(({ value }) => {
+      deleteRecordItem(id);
+    });
   });
 };
 
@@ -121,7 +145,7 @@ const getPeriodsList = async () => {
     console.error(err);
   }
 };
-const periodChange = (value: number) => {
+const filterChange = (e: any) => {
   refreshData();
 }
 
@@ -142,18 +166,14 @@ const dateFilter = (date: string) => {
 const billingModalVisible = ref(false);
 const billingSubmit = () => {
   tabsActive.value = 0
-  periodActive.value = '';
+  filterForm.period = ''
+  filterForm.type = ''
   refreshData()
   scrollToId('pageHeader');
 }
 
 const typeFilter = (value: TransactionType) => {
-  const map = {
-    'expense': '代付',
-    'loan': '个人借款',
-    'repayment': '个人还款',
-  }
-  return map[value]
+  return billingTypeMap[value]
 }
 
 const deleteItemDisabled = (item: Transaction) => {
@@ -163,126 +183,142 @@ const deleteItemDisabled = (item: Transaction) => {
 
 <template>
   <div class="home-page">
-    <div class="flex justify-between items-center mb-12">
-      <el-button type="primary" @click="billingModalVisible = true"
-        >添加账单</el-button
-      >
-      <el-button type="danger" :disabled="recordList.length === 0" @click="handleClearRecord"
-        >清空本期账单</el-button
-      >
+
+    <div class="actions-box">
+      <div class="flex justify-between items-center actions-main">
+        <el-button type="primary" @click="billingModalVisible = true"
+          >添加账单</el-button
+        >
+        <el-button type="danger" :disabled="recordList.length === 0" @click="handleClearRecord"
+          >清空本期账单</el-button
+        >
+      </div>
+      <div class="actions-placeholder"></div>
     </div>
 
-    <div class="section-title">统计</div>
-    <div>
-      <el-card
-        v-if="summaryList && summaryList.length"
-        header-class="card-header"
-        body-class="card-body"
-        footer-class="card-footer"
-      >
-        <ul>
-          <li v-for="item in summaryList" class="mb-4 flex gap-4">
-            <b style="min-width: 56px;">{{ item.name }}：</b>
-            <span class="amount-color">${{ item.balance }}</span>
-          </li>
-        </ul>
-      </el-card>
-    </div>
-    
-    <div class="section-title">记录</div>
+    <div class="home-page-main">
+      <div class="section-title">统计</div>
+      <div>
+        <el-card
+          v-if="summaryList && summaryList.length"
+          header-class="card-header"
+          body-class="card-body"
+          footer-class="card-footer"
+        >
+          <ul>
+            <li v-for="item in summaryList" class="mb-4 flex gap-4">
+              <b style="min-width: 56px;">{{ item.name }}：</b>
+              <span class="amount-color">${{ item.balance }}</span>
+            </li>
+          </ul>
+        </el-card>
+      </div>
+      
+      <div class="section-title">记录</div>
 
-    <div v-loading="recordListPending">
-      <el-tabs v-model="tabsActive" @tab-click="tabsChange">
-        <el-tab-pane label="本期" :name="0"></el-tab-pane>
-        <el-tab-pane label="往期" :name="1"></el-tab-pane>
-      </el-tabs>
+      <div v-loading="recordListPending">
+        <el-tabs v-model="tabsActive" @tab-click="tabsChange">
+          <el-tab-pane label="本期" :name="0"></el-tab-pane>
+          <el-tab-pane label="往期" :name="1"></el-tab-pane>
+        </el-tabs>
 
-      <template v-if="tabsActive === 1">
-        <div class="mb-12 flex items-center">
-          <label class="period-label">期数：</label>
-          <div class="flex-1 overflow-hidden">
-            <el-select v-model="periodActive" placeholder="请选择期数" @change="periodChange" style="width: 100%; max-width: 400px;">
-              <template v-for="(item, index) in periodsList">
-                <!-- 不需要显示 本期 option -->
-                <el-option
-                  v-if="index !== 0"
-                  :label="`第 ${item} 期`"
-                  :value="item"
-                />
+        <div class="filter-form">
+          <el-form :inline="true" :model="filterForm" class="demo-form-inline">
+
+            <el-row :gutter="10">
+              <el-col v-bind="colLayout">
+                <el-form-item label="类型：">
+                  <el-select v-model="filterForm.type" placeholder="请选择类型" @change="filterChange" clearable style="width: 100%;">
+                    <template v-for="(label, key) in billingTypeMap">
+                      <el-option :label="label" :value="key" />
+                    </template>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              
+              <template v-if="tabsActive === 1">
+                <el-col v-bind="colLayout">
+                  <el-form-item label="期数：">
+                    <el-select v-model="filterForm.period" placeholder="请选择期数" @change="filterChange" clearable style="width: 100%;">
+                      <template v-for="(item, index) in periodsList">
+                        <!-- 不需要显示 本期 option -->
+                        <el-option
+                          v-if="index !== 0"
+                          :label="`第 ${item} 期`"
+                          :value="item"
+                        />
+                      </template>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
               </template>
-            </el-select>
-          </div>
-          
+            </el-row>
+          </el-form>
         </div>
-      </template>
-      <el-row v-if="recordList && recordList.length" :gutter="10">
-        <el-col v-for="item in recordList" :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card
-            class="mb-12"
-            header-class="card-header"
-            body-class="card-body"
-            footer-class="card-footer"
-          >
-            <ul>
-              <li class="record-info-item">
-                <div class="record-info-label">金额：</div>
-                <div class="record-info-value amount-color">
-                  <span>${{ item.amount }}</span>
-                  <span v-if="item.type === 'expense'">（${{ (item.amount/item.participantsNames.length).toFixed(2) }}/人）</span>
+
+        <el-row v-if="recordList && recordList.length" :gutter="10">
+          <el-col v-for="item in recordList" v-bind="colLayout">
+            <el-card
+              class="mb-12"
+              header-class="card-header"
+              body-class="card-body"
+              footer-class="card-footer"
+            >
+              <ul>
+                <li class="record-info-item">
+                  <div class="record-info-label">金额：</div>
+                  <div class="record-info-value amount-color">
+                    <span>${{ item.amount }}</span>
+                    <span v-if="item.type === 'expense'">（${{ (item.amount/item.participantsNames.length).toFixed(2) }}/人）</span>
+                  </div>
+                </li>
+                <li class="record-info-item">
+                  <div class="record-info-label">类型：</div>
+                  <div class="record-info-value">{{ typeFilter(item.type) }}</div>
+                </li>
+                <li class="record-info-item">
+                  <div class="record-info-label">付款人：</div>
+                  <div class="record-info-value">{{ item.payerName }}</div>
+                </li>
+                <li class="record-info-item">
+                  <div class="record-info-label">受益人：</div>
+                  <div class="record-info-value">
+                    {{ item.participantsNames.join("、") }}
+                  </div>
+                </li>
+                <li v-if="tabsActive === 1" class="record-info-item">
+                  <div class="record-info-label">清空人：</div>
+                  <div class="record-info-value color-warning">
+                    {{ item.settledByName || ''}}
+                  </div>
+                </li>
+                <li class="record-info-item">
+                  <div class="record-info-label">日期：</div>
+                  <div class="record-info-value">
+                    {{ dateFilter(item.transactionDate) }}
+                  </div>
+                </li>
+                <li class="record-info-item">
+                  <div class="record-info-label">备注：</div>
+                  <div class="record-info-value">{{ item.description }}</div>
+                </li>
+              </ul>
+              <template #footer>
+                <div class="flex items-center justify-end">
+                  <el-button
+                    :type="deleteItemDisabled(item) ? 'info' : 'danger'"
+                    link
+                    :disabled="deleteItemDisabled(item)"
+                    @click="handleDeleteRecord(item.id)"
+                    >删除</el-button
+                  >
                 </div>
-              </li>
-              <li class="record-info-item">
-                <div class="record-info-label">类型：</div>
-                <div class="record-info-value">{{ typeFilter(item.type) }}</div>
-              </li>
-              <li class="record-info-item">
-                <div class="record-info-label">付款人：</div>
-                <div class="record-info-value">{{ item.payerName }}</div>
-              </li>
-              <li class="record-info-item">
-                <div class="record-info-label">受益人：</div>
-                <div class="record-info-value">
-                  {{ item.participantsNames.join("、") }}
-                </div>
-              </li>
-              <!-- <li class="record-info-item">
-                <div class="record-info-label">创建人：</div>
-                <div class="record-info-value">
-                  {{ item.creatorName }}
-                </div>
-              </li> -->
-              <li v-if="tabsActive === 1" class="record-info-item">
-                <div class="record-info-label">清空人：</div>
-                <div class="record-info-value color-warning">
-                  {{ item.settledByName || ''}}
-                </div>
-              </li>
-              <li class="record-info-item">
-                <div class="record-info-label">日期：</div>
-                <div class="record-info-value">
-                  {{ dateFilter(item.transactionDate) }}
-                </div>
-              </li>
-              <li class="record-info-item">
-                <div class="record-info-label">备注：</div>
-                <div class="record-info-value">{{ item.description }}</div>
-              </li>
-            </ul>
-            <template #footer>
-              <div class="flex items-center justify-end">
-                <el-button
-                  :type="deleteItemDisabled(item) ? 'info' : 'danger'"
-                  link
-                  :disabled="deleteItemDisabled(item)"
-                  @click="handleDeleteRecord(item.id)"
-                  >删除</el-button
-                >
-              </div>
-            </template>
-          </el-card>
-        </el-col>
-      </el-row>
-      <el-empty v-else />
+              </template>
+            </el-card>
+          </el-col>
+        </el-row>
+        <el-empty v-else />
+      </div>
     </div>
 
     <BillingModal
@@ -296,7 +332,28 @@ const deleteItemDisabled = (item: Transaction) => {
 
 <style lang="scss">
 .home-page {
-  padding: 16px 12px;
+  .home-page-main {
+    padding: 16px 12px;
+  }
+  .actions-main {
+    padding: 10px 12px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 44px;
+    z-index: 97;
+    background: var(--el-bg-color);
+    border: 0.5px solid var(--el-fill-color);
+  }
+  .actions-main,
+  .actions-placeholder {
+    height: 52px;
+  }
+  .filter-form {
+    .el-form-item {
+      width: 100%;
+    }
+  }
   .el-card__header.card-header,
   .el-card__body.card-body,
   .el-card__footer.card-footer {
@@ -329,6 +386,9 @@ const deleteItemDisabled = (item: Transaction) => {
     margin: 20px 0 10px;
     padding: 0 10px;
     position: relative;
+    &:first-child {
+      margin-top: 0;
+    }
     &::after {
       content: '';
       display: block;
