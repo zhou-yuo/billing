@@ -74,6 +74,26 @@ a {
   color: var(--el-text-color-secondary);
 }
 
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
 .font-bold {
   font-weight: bold;
 }
