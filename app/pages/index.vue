@@ -352,6 +352,7 @@ const deleteItemDisabled = (item: Transaction) => {
   .filter-form {
     .el-form-item {
       width: 100%;
+      margin-right: 0;
     }
   }
   .el-card__header.card-header,
