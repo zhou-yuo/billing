@@ -269,7 +269,7 @@ const deleteItemDisabled = (item: Transaction) => {
                   <div class="record-info-label">金额：</div>
                   <div class="record-info-value amount-color">
                     <span>${{ item.amount }}</span>
-                    <span v-if="item.type === 'expense'">（${{ (item.amount/item.participantsNames.length).toFixed(2) }}/人）</span>
+                    <span v-if="item.type === 'expense'">（${{ Math.round((item.amount / item.participantsNames.length) * 100) / 100 }}/人）</span>
                   </div>
                 </li>
                 <li class="record-info-item">
@@ -352,6 +352,7 @@ const deleteItemDisabled = (item: Transaction) => {
   .filter-form {
     .el-form-item {
       width: 100%;
+      margin-right: 0;
     }
   }
   .el-card__header.card-header,

@@ -1,7 +1,7 @@
 // server/database/schema.ts
 import { sqliteTable, text, real, integer } from 'drizzle-orm/sqlite-core';
 
-// 用户表 (虽然只有4个，但用表来管理更规范)
+// 用户表
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(), // 'user_a', 'user_b' ...
   name: text('name').notNull(), // 'A', 'B'
