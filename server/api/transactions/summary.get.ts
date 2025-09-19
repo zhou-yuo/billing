@@ -43,7 +43,7 @@ export default defineEventHandler(
         conditions.push(eq(tables.transactions.type, queryType as TransactionType));
       }
 
-      // 1. 并发查询所有交易 和 所有用户信息（ID 和 Name）
+      // 并发查询所有交易 和 所有用户信息（ID 和 Name）
       const [allTransactions, allUsers] = await Promise.all([
         db.select().from(tables.transactions)
         .where(and(...conditions)), // 只统计目标期数的账单
