@@ -10,6 +10,7 @@ export default defineEventHandler(async (event) => {
     // 从查询参数中获取期数，并转换为数字
     const queryPeriod = query.period ? parseInt(query.period as string, 10) : null;
     const queryType = query.type as string | undefined;
+    const queryStatus = query.status as number | undefined;
 
     const db = useDrizzle();
 
@@ -32,6 +33,11 @@ export default defineEventHandler(async (event) => {
       // 如果 queryType 存在且是预定义的合法类型之一，才添加此筛选条件
       // 使用类型断言，因为我们已经用 .includes() 检查过了
       conditions.push(eq(tables.transactions.type, queryType as TransactionType));
+    }
+
+    // 结清状态：0 表示未结清，1 表示已结清。默认为 0
+    if(queryStatus && !isNaN(queryStatus)) {
+      conditions.push(eq(tables.transactions.status, queryStatus));
     }
 
     // 并发查询所有交易记录 和 所有用户信息
