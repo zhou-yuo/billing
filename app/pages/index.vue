@@ -16,12 +16,38 @@ const filterForm = reactive<{
   type: '', // 账单类型 'expense'-多人消费, 'loan'-个人借款, 'repayment'-个人还款
 })
 
+// 结清状态：0 表示未结清，1 表示已结清。默认为 0
+const statusTabsActive = ref(0);
+const statusTabsChange = (e: any) => {
+  statusTabsActive.value = e.props.name;
+
+  if(e.props.name === 1) {
+    // 往期
+    if(periodsList.value && periodsList.value.length > 1) {
+      // 查看往期，默认选中最后一个往期
+      // index 0 是本期，要取 1;
+      filterForm.period = periodsList.value[1]!;
+    } else {
+      filterForm.period = '';
+    }
+  } else {
+    filterForm.period = ''
+  }
+  filterForm.type = ''
+
+  refreshData();
+}
+
+const initParams = () => {
+  return `period=${ filterForm.period }&type=${ filterForm.type }&status=${ statusTabsActive.value }`
+}
+
 // 获取记录列表
-const recordListPromise = useApiFetch<ApiResponse<Transaction[]>>(() => `transactions?period=${ filterForm.period }&type=${ filterForm.type }`, {
+const recordListPromise = useApiFetch<ApiResponse<Transaction[]>>(() => `transactions?period=${ filterForm.period }&type=${ filterForm.type }&status=${ statusTabsActive.value }`, {
   key: 'transactions-list',
 });
 // 获取统计列表
-const summaryListPromise = useApiFetch<ApiResponse<Summary[]>>(() => `transactions/summary?period=${ filterForm.period }&type=${ filterForm.type }`, {
+const summaryListPromise = useApiFetch<ApiResponse<Summary[]>>(() => `transactions/summary?${ initParams() }`, {
   key: 'transactions-summary',
 });
 
@@ -37,25 +63,6 @@ const [
 const recordList = computed(() => recordListRes.value?.data || [])
 // 统计列表
 const summaryList = computed(() => summaryListRes.value?.data || []) 
-
-const tabsActive = ref(0);
-const tabsChange = (e: any) => {
-  if(e.props.name === 1) {
-    // 往期
-    if(periodsList.value && periodsList.value.length > 1) {
-      // 查看往期，默认选中最后一个往期
-      // index 0是本期，要取 1;
-      filterForm.period = periodsList.value[1]!;
-    } else {
-      filterForm.period = '';
-    }
-  } else {
-    filterForm.period = ''
-  }
-  filterForm.type = ''
-
-  refreshData();
-}
 
 const colLayout = ref({
   xs: 24,
@@ -165,7 +172,7 @@ const dateFilter = (date: string) => {
 
 const billingModalVisible = ref(false);
 const billingSubmit = () => {
-  tabsActive.value = 0
+  statusTabsActive.value = 0
   filterForm.period = ''
   filterForm.type = ''
   refreshData()
@@ -217,7 +224,7 @@ const deleteItemDisabled = (item: Transaction) => {
       <div class="section-title">记录</div>
 
       <div v-loading="recordListPending">
-        <el-tabs v-model="tabsActive" @tab-click="tabsChange">
+        <el-tabs v-model="statusTabsActive" @tab-click="statusTabsChange">
           <el-tab-pane label="本期" :name="0"></el-tab-pane>
           <el-tab-pane label="往期" :name="1"></el-tab-pane>
         </el-tabs>
@@ -236,7 +243,7 @@ const deleteItemDisabled = (item: Transaction) => {
                 </el-form-item>
               </el-col>
               
-              <template v-if="tabsActive === 1">
+              <template v-if="statusTabsActive === 1">
                 <el-col v-bind="colLayout">
                   <el-form-item label="期数：">
                     <el-select v-model="filterForm.period" placeholder="请选择期数" @change="filterChange" clearable style="width: 100%;">
@@ -286,7 +293,7 @@ const deleteItemDisabled = (item: Transaction) => {
                     {{ item.participantsNames.join("、") }}
                   </div>
                 </li>
-                <li v-if="tabsActive === 1" class="record-info-item">
+                <li v-if="item.status === 1" class="record-info-item">
                   <div class="record-info-label">清空人：</div>
                   <div class="record-info-value color-warning">
                     {{ item.settledByName || ''}}
