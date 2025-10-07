@@ -310,7 +310,7 @@ const deleteItemDisabled = (item: Transaction) => {
                   <div class="record-info-value">{{ item.description }}</div>
                 </li>
               </ul>
-              <template #footer>
+              <template v-if="item.status === 0" #footer>
                 <div class="flex items-center justify-end">
                   <el-button
                     :type="deleteItemDisabled(item) ? 'info' : 'danger'"
